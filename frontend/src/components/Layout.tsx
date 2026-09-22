@@ -12,6 +12,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { useTheme } from '../hooks/useTheme'
 import { LOCAL_MODE } from '../lib/repo'
 
 const NAV = [
@@ -20,27 +21,6 @@ const NAV = [
   { to: '/campaigns', label: 'แคมเปญ', icon: Megaphone, end: false },
   { to: '/analytics', label: 'วิเคราะห์', icon: BarChart3, end: false },
 ]
-
-function useTheme() {
-  const [dark, setDark] = useState<boolean>(() => {
-    try {
-      const s = localStorage.getItem('kol-theme')
-      if (s) return s === 'dark'
-    } catch {
-      /* ignore */
-    }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-  })
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-    try {
-      localStorage.setItem('kol-theme', dark ? 'dark' : 'light')
-    } catch {
-      /* ignore */
-    }
-  }, [dark])
-  return { dark, toggle: () => setDark((d) => !d) }
-}
 
 export function Layout() {
   const { dark, toggle } = useTheme()
@@ -113,15 +93,24 @@ export function Layout() {
               {LOCAL_MODE ? 'โหมด Local' : user?.email}
             </div>
           </div>
-          {!LOCAL_MODE && (
-            <button
-              onClick={signOut}
-              title="ออกจากระบบ"
-              className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-bad"
-            >
-              <LogOut size={16} />
-            </button>
-          )}
+          <button
+            onClick={() => {
+              if (LOCAL_MODE) {
+                try {
+                  localStorage.removeItem('kol-session')
+                } catch {
+                  /* ignore */
+                }
+                window.location.assign('/')
+              } else {
+                signOut()
+              }
+            }}
+            title="ออกจากระบบ"
+            className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-bad"
+          >
+            <LogOut size={16} />
+          </button>
         </div>
       </aside>
 
