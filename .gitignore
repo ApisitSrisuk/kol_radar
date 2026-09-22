@@ -1,0 +1,29 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# build output
+dist/
+dist-ssr/
+build/
+
+# env / secrets
+.env
+.env.local
+*.local
+**/.env
+
+# tsc build artifacts
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
+# logs
+*.log
+npm-debug.log*
+
+# editor / OS
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/

@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f7f4ef;
+  --surface: #ffffff;
+  --surface-2: #f1ece4;
+  --surface-3: #e9e3d8;
+  --line: #e3dcd0;
+  --line-strong: #d3c9b9;
+  --fg: #1b1813;
+  --muted: #6c6456;
+  --faint: #9a9184;
+  --accent: #ec4079;
+  --accent-soft: #fce4ec;
+  --accent-ink: #b21e56;
+  --good: #12a46a;
+  --good-soft: #dcf3e8;
+  --warn: #e0821a;
+  --warn-soft: #fbebd3;
+  --bad: #e0483c;
+  --bad-soft: #fbe0dd;
+  --cyan: #0ea5b7;
+}
+
+.dark {
+  --bg: #141210;
+  --surface: #1e1b17;
+  --surface-2: #26221d;
+  --surface-3: #312b24;
+  --line: #332d26;
+  --line-strong: #463e33;
+  --fg: #f4efe7;
+  --muted: #a79d8d;
+  --faint: #776f62;
+  --accent: #f5578c;
+  --accent-soft: #3a1c29;
+  --accent-ink: #f98fb2;
+  --good: #2bc183;
+  --good-soft: #123626;
+  --warn: #f0a94a;
+  --warn-soft: #3a2a12;
+  --bad: #f26a5e;
+  --bad-soft: #3a1c18;
+  --cyan: #2cc4d6;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'IBM Plex Sans Thai', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Kanit', 'IBM Plex Sans Thai', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Recharts: ให้ข้อความอ่านออกทั้งสองธีม */
+.recharts-cartesian-axis-tick text,
+.recharts-text {
+  fill: var(--faint);
+}
