@@ -52,17 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
     let alive = true
-    supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', uid)
-      .maybeSingle()
-      .then(({ data }) => {
+    ;(async () => {
+      try {
+        const { data } = await supabase.from('profiles').select('role').eq('id', uid).maybeSingle()
         if (alive) setRole(((data?.role as Role) ?? 'admin'))
-      })
-      .catch(() => {
+      } catch {
         if (alive) setRole('admin')
-      })
+      }
+    })()
     return () => {
       alive = false
     }
