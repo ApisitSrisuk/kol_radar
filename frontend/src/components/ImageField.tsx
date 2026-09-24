@@ -6,10 +6,12 @@ export function ImageField({
   value,
   onChange,
   hint = 'PNG หรือ JPG · ระบบจะย่อขนาดให้อัตโนมัติ',
+  label = 'คลิกเพื่ออัปโหลดรูป',
 }: {
   value?: string
   onChange: (dataUrl: string | undefined) => void
   hint?: string
+  label?: string
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
@@ -69,7 +71,7 @@ export function ImageField({
           className="flex w-full flex-col items-center justify-center gap-2 rounded-xl2 border-2 border-dashed border-line-strong bg-surface-2 py-8 text-muted transition hover:border-accent hover:text-accent disabled:opacity-50"
         >
           {busy ? <Loader2 size={22} className="animate-spin" /> : <ImageIcon size={22} />}
-          <span className="text-[13px] font-semibold">{busy ? 'กำลังประมวลผล...' : 'คลิกเพื่ออัปโหลดรูป comp card'}</span>
+          <span className="text-[13px] font-semibold">{busy ? 'กำลังประมวลผล...' : label}</span>
           <span className="text-[11.5px] text-faint">{hint}</span>
         </button>
       )}

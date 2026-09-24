@@ -68,8 +68,19 @@ create table if not exists public.campaign_kols (
   primary key (campaign_id, kol_id)
 );
 
+-- ---------- Table: messages (แชท 1-1 ทีม <-> KOL) ----------
+create table if not exists public.messages (
+  id          uuid primary key default gen_random_uuid(),
+  owner_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  kol_id      uuid not null references public.kols(id) on delete cascade,
+  sender      text not null check (sender in ('team','kol')),
+  text        text not null,
+  created_at  timestamptz not null default now()
+);
+
 -- ---------- Indexes ----------
 create index if not exists idx_kols_owner      on public.kols(owner_id);
+create index if not exists idx_messages_kol    on public.messages(kol_id, created_at);
 create index if not exists idx_campaigns_owner on public.campaigns(owner_id);
 create index if not exists idx_ck_owner        on public.campaign_kols(owner_id);
 create index if not exists idx_ck_campaign     on public.campaign_kols(campaign_id);
@@ -78,6 +89,7 @@ create index if not exists idx_ck_campaign     on public.campaign_kols(campaign_
 alter table public.kols          enable row level security;
 alter table public.campaigns     enable row level security;
 alter table public.campaign_kols enable row level security;
+alter table public.messages      enable row level security;
 
 -- ผู้ใช้เห็น/เพิ่ม/แก้/ลบ ได้เฉพาะข้อมูลของตัวเอง (owner_id = auth.uid())
 drop policy if exists kols_owner_all on public.kols;
@@ -91,3 +103,9 @@ create policy campaigns_owner_all on public.campaigns
 drop policy if exists ck_owner_all on public.campaign_kols;
 create policy ck_owner_all on public.campaign_kols
   for all using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
+
+drop policy if exists messages_owner_all on public.messages;
+create policy messages_owner_all on public.messages
+  for all using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
+-- หมายเหตุ: ให้ KOL แชทได้จริงในโหมด Supabase ต้องผูกบัญชี KOL (account_id ใน kols)
+-- แล้วเพิ่ม policy ให้ฝั่ง KOL อ่าน/ส่งข้อความของตัวเองได้ + เปิด Realtime บนตาราง messages

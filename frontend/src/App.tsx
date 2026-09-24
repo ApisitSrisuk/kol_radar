@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { DataProvider } from './hooks/DataContext'
 import { ToastProvider } from './hooks/Toast'
+import { ThemeProvider } from './hooks/ThemeContext'
 import { LOCAL_MODE } from './lib/repo'
 import { Layout } from './components/Layout'
 import { PortalLayout } from './components/PortalLayout'
@@ -12,9 +13,11 @@ import { Kols } from './pages/Kols'
 import { KolProfile } from './pages/KolProfile'
 import { Campaigns } from './pages/Campaigns'
 import { Analytics } from './pages/Analytics'
+import { Settings } from './pages/Settings'
 import { PortalDashboard } from './pages/portal/PortalDashboard'
 import { PortalProfile } from './pages/portal/PortalProfile'
 import { PortalCampaigns } from './pages/portal/PortalCampaigns'
+import { ChatWidget } from './components/chat/ChatWidget'
 
 /** แอปฝั่งทีมการตลาด */
 function TeamShell() {
@@ -27,9 +30,11 @@ function TeamShell() {
           <Route path="kols/:id" element={<KolProfile />} />
           <Route path="campaigns" element={<Campaigns />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+      <ChatWidget role="team" />
     </DataProvider>
   )
 }
@@ -46,6 +51,7 @@ function PortalShell({ kolId, onExit }: { kolId: string; onExit: () => void }) {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+      <ChatWidget role="kol" kolId={kolId} />
     </DataProvider>
   )
 }
@@ -105,12 +111,14 @@ function Gate() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <ToastProvider>
-        <AuthProvider>
-          <Gate />
-        </AuthProvider>
-      </ToastProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <ToastProvider>
+          <AuthProvider>
+            <Gate />
+          </AuthProvider>
+        </ToastProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }

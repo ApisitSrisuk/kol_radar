@@ -1,14 +1,22 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { LayoutDashboard, UserCircle, Megaphone, Moon, Sun, Menu, LogOut } from 'lucide-react'
-import { useTheme } from '../hooks/useTheme'
+import { useTheme, DEFAULT_SITE_NAME } from '../hooks/ThemeContext'
 import { useData } from '../hooks/DataContext'
 import { Avatar } from './common'
+import { BottomTabs, type TabItem } from './BottomTabs'
+import { LogoBadge } from './LogoBadge'
 
 const NAV = [
   { to: '/', label: 'แดชบอร์ดของฉัน', icon: LayoutDashboard, end: true },
   { to: '/profile', label: 'โปรไฟล์ของฉัน', icon: UserCircle, end: false },
   { to: '/campaigns', label: 'แคมเปญของฉัน', icon: Megaphone, end: false },
+]
+
+const TABS: TabItem[] = [
+  { to: '/', label: 'หน้าหลัก', icon: LayoutDashboard, end: true },
+  { to: '/profile', label: 'โปรไฟล์', icon: UserCircle },
+  { to: '/campaigns', label: 'แคมเปญ', icon: Megaphone },
 ]
 
 const TITLES: Record<string, [string, string]> = {
@@ -18,7 +26,8 @@ const TITLES: Record<string, [string, string]> = {
 }
 
 export function PortalLayout({ kolId, onExit }: { kolId: string; onExit: () => void }) {
-  const { dark, toggle } = useTheme()
+  const { dark, toggle, siteName } = useTheme()
+  const brand = siteName.trim() || DEFAULT_SITE_NAME
   const { kols } = useData()
   const [open, setOpen] = useState(false)
   const loc = useLocation()
@@ -35,14 +44,9 @@ export function PortalLayout({ kolId, onExit }: { kolId: string; onExit: () => v
         }`}
       >
         <div className="flex items-center gap-2.5 px-2 pb-4">
-          <div
-            className="grid h-[34px] w-[34px] place-items-center rounded-[10px] font-display text-lg font-bold text-white shadow-card"
-            style={{ background: 'linear-gradient(135deg,var(--accent),#FF8A5B)' }}
-          >
-            K
-          </div>
+          <LogoBadge size={34} />
           <div>
-            <b className="block font-display text-[17px] leading-tight tracking-tight">KOL Radar</b>
+            <b className="block font-display text-[17px] leading-tight tracking-tight">{brand}</b>
             <span className="text-[11px] text-faint">พื้นที่ของ KOL</span>
           </div>
         </div>
@@ -106,10 +110,12 @@ export function PortalLayout({ kolId, onExit }: { kolId: string; onExit: () => v
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
         </header>
-        <main className="mx-auto w-full max-w-[1100px] px-4 pb-16 pt-6 md:px-6">
+        <main className="mx-auto w-full max-w-[1100px] px-4 pb-24 pt-6 md:px-6 md:pb-16">
           <Outlet context={{ kolId }} />
         </main>
       </div>
+
+      <BottomTabs items={TABS} />
     </div>
   )
 }

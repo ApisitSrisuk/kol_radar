@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Sparkles, ArrowRight, Users, UserCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { useTheme, DEFAULT_SITE_NAME } from '../hooks/ThemeContext'
 import { isConfigured } from '../lib/supabase'
 import * as repo from '../lib/repo'
 import { KolApplyForm } from '../components/KolApplyForm'
+import { LogoBadge } from '../components/LogoBadge'
 
 export function Login({
   localMode = false,
@@ -15,6 +17,8 @@ export function Login({
   onEnterKol?: (kolId: string) => void
 }) {
   const { signIn, signUp } = useAuth()
+  const { siteName } = useTheme()
+  const brand = siteName.trim() || DEFAULT_SITE_NAME
   const [mode, setMode] = useState<'in' | 'up'>('in')
   const [applyOpen, setApplyOpen] = useState(false)
   const [email, setEmail] = useState('')
@@ -73,14 +77,9 @@ export function Login({
     <div className="grid min-h-dvh place-items-center p-4">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
-          <div
-            className="grid h-14 w-14 place-items-center rounded-2xl font-display text-3xl font-bold text-white shadow-card"
-            style={{ background: 'linear-gradient(135deg,var(--accent),#FF8A5B)' }}
-          >
-            K
-          </div>
+          <LogoBadge size={56} radius={18} />
           <div>
-            <h1 className="font-display text-2xl font-semibold">KOL Radar</h1>
+            <h1 className="font-display text-2xl font-semibold">{brand}</h1>
             <p className="text-[13px] text-faint">ระบบติดตาม KOL ทุกแพลตฟอร์ม</p>
           </div>
         </div>
