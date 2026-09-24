@@ -4,6 +4,8 @@ import { Pencil } from 'lucide-react'
 import { useData } from '../../hooks/DataContext'
 import { useToast } from '../../hooks/Toast'
 import { Card, CardHeader, Button, Modal, Field, TextInput, Select } from '../../components/ui'
+import { ImageField } from '../../components/ImageField'
+import { CompCard } from '../../components/CompCard'
 import { Avatar, PlatformChips, TierBadge, StatusBadge } from '../../components/common'
 import { PLATFORMS, ALL_PLATFORMS, TIER_LABEL, CATEGORIES, tierFromFollowers } from '../../lib/constants'
 import { fmt, baht } from '../../lib/format'
@@ -50,17 +52,25 @@ export function PortalProfile() {
         </div>
       </Card>
 
-      <Card>
-        <CardHeader title="ข้อมูลของฉัน" />
-        <div className="divide-y divide-line">
-          {rows.map(([label, val, color]) => (
-            <div key={label} className="flex items-center justify-between px-[18px] py-3">
-              <span className="text-[13px] text-muted">{label}</span>
-              <span className="tnum font-semibold" style={color ? { color } : undefined}>{val}</span>
-            </div>
-          ))}
-        </div>
-      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader title="ข้อมูลของฉัน" />
+          <div className="divide-y divide-line">
+            {rows.map(([label, val, color]) => (
+              <div key={label} className="flex items-center justify-between px-[18px] py-3">
+                <span className="text-[13px] text-muted">{label}</span>
+                <span className="tnum font-semibold" style={color ? { color } : undefined}>{val}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <Card>
+          <CardHeader title="Comp Card / Media Kit" hint="อัปโหลด/เปลี่ยนได้ที่ปุ่มแก้ไขข้อมูล" />
+          <div className="p-[18px]">
+            <CompCard value={me.compcard} name={me.name} emptyText="ยังไม่มี comp card — กด “แก้ไขข้อมูล” เพื่ออัปโหลด" />
+          </div>
+        </Card>
+      </div>
 
       <EditModal
         open={open}
@@ -84,6 +94,7 @@ interface EditState {
   engagement_rate: number
   rate_per_post: number
   contact: string
+  compcard?: string
 }
 
 function EditModal({
@@ -135,6 +146,7 @@ function EditModal({
         roi: me.roi,
         growth: me.growth,
         contact: form.contact.trim(),
+        compcard: form.compcard,
       }
       await onSave(input)
       onClose()
@@ -193,6 +205,10 @@ function EditModal({
           <Field label="ค่าตัว/โพสต์ (฿)"><TextInput type="number" value={form.rate_per_post} onChange={num('rate_per_post')} /></Field>
         </div>
 
+        <Field label="Comp card / Media kit">
+          <ImageField value={form.compcard} onChange={(v) => set('compcard', v)} />
+        </Field>
+
         <div className="flex items-center gap-2 rounded-lg bg-surface-2 px-3 py-2 text-[12.5px] text-muted">
           ระดับที่ประเมินอัตโนมัติ:
           <span className="font-semibold text-fg">{TIER_LABEL[tierFromFollowers(form.followers)]}</span>
@@ -219,5 +235,6 @@ function pick(k: Kol): EditState {
     engagement_rate: k.engagement_rate,
     rate_per_post: k.rate_per_post,
     contact: k.contact ?? '',
+    compcard: k.compcard,
   }
 }

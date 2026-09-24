@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { Modal, Field, TextInput, Select, Button } from './ui'
+import { ImageField } from './ImageField'
 import { ALL_PLATFORMS, PLATFORMS, TIER_LABEL, CATEGORIES, tierFromFollowers } from '../lib/constants'
 import * as repo from '../lib/repo'
 import { fmt } from '../lib/format'
@@ -15,11 +16,12 @@ interface ApplyState {
   engagement_rate: number
   rate_per_post: number
   contact: string
+  compcard?: string
 }
 
 const empty: ApplyState = {
   name: '', handle: '', category: 'ความงาม', platforms: ['ig'],
-  followers: 0, engagement_rate: 0, rate_per_post: 0, contact: '',
+  followers: 0, engagement_rate: 0, rate_per_post: 0, contact: '', compcard: undefined,
 }
 
 export function KolApplyForm({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -66,6 +68,7 @@ export function KolApplyForm({ open, onClose }: { open: boolean; onClose: () => 
         roi: 0,
         growth: 0,
         contact: form.contact.trim(),
+        compcard: form.compcard,
       }
       await repo.addKol(input)
       setDone(true)
@@ -154,6 +157,10 @@ export function KolApplyForm({ open, onClose }: { open: boolean; onClose: () => 
             <span className="font-semibold text-fg">{TIER_LABEL[tier]}</span>
             <span className="text-faint">({fmt(form.followers)} followers)</span>
           </div>
+
+          <Field label="Comp card / Media kit (ไม่บังคับ)">
+            <ImageField value={form.compcard} onChange={(v) => set('compcard', v)} />
+          </Field>
 
           {err && <div className="rounded-lg bg-bad-soft px-3 py-2 text-[13px] text-bad">{err}</div>}
 

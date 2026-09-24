@@ -38,6 +38,9 @@ create table if not exists public.kols (
   roi             numeric(5,2) not null default 0,
   growth          numeric(5,2) not null default 0,
   contact         text not null default '',
+  -- comp card / media kit: โหมด Local เก็บเป็น data URL (base64)
+  -- โปรดักชันจริงควรอัปโหลดขึ้น Supabase Storage แล้วเก็บเป็น URL แทน
+  compcard        text,
   created_at      timestamptz not null default now()
 );
 

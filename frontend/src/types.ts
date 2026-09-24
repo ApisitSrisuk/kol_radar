@@ -19,6 +19,7 @@ export interface Kol {
   roi: number
   growth: number
   contact?: string
+  compcard?: string
   created_at: string
 }
 

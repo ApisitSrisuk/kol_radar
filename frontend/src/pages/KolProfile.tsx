@@ -6,6 +6,7 @@ import { useToast } from '../hooks/Toast'
 import { Card, CardHeader, Button } from '../components/ui'
 import { Avatar, PlatformChips, TierBadge, StatusBadge, StageBadge } from '../components/common'
 import { KolForm } from '../components/KolForm'
+import { CompCard } from '../components/CompCard'
 import { TrendChart, HBarChart } from '../components/charts'
 import { PLATFORMS } from '../lib/constants'
 import { fmt, baht } from '../lib/format'
@@ -120,6 +121,13 @@ export function KolProfile() {
           </div>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader title="Comp Card / Media Kit" />
+        <div className="p-[18px]">
+          <CompCard value={k.compcard} name={k.name} />
+        </div>
+      </Card>
 
       <Card>
         <CardHeader title="ประวัติแคมเปญ" hint={`${kCamps.length} แคมเปญ`} />

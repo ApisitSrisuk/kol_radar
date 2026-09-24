@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Modal, Field, TextInput, Select, Button } from './ui'
+import { ImageField } from './ImageField'
 import { ALL_PLATFORMS, ALL_TIERS, ALL_STATUSES, PLATFORMS, TIER_LABEL, STATUS_LABEL, CATEGORIES } from '../lib/constants'
 import type { Kol, KolInput, Platform } from '../types'
 
 const empty: KolInput = {
   name: '', handle: '', category: 'ความงาม', tier: 'micro', platforms: ['ig'],
   followers: 0, engagement_rate: 0, avg_views: 0, rate_per_post: 0,
-  status: 'active', roi: 0, growth: 0, contact: '',
+  status: 'active', roi: 0, growth: 0, contact: '', compcard: undefined,
 }
 
 export function KolForm({
@@ -133,6 +134,10 @@ export function KolForm({
             <TextInput value={form.contact ?? ''} onChange={(e) => set('contact', e.target.value)} placeholder="อีเมล / Line / เบอร์" />
           </Field>
         </div>
+
+        <Field label="Comp card / Media kit">
+          <ImageField value={form.compcard} onChange={(v) => set('compcard', v)} />
+        </Field>
 
         {err && <div className="rounded-lg bg-bad-soft px-3 py-2 text-[13px] text-bad">{err}</div>}
 
