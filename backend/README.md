@@ -38,3 +38,17 @@
 ## ข้อมูลตัวอย่าง
 แนะนำให้กดปุ่ม **"โหลดข้อมูลตัวอย่าง"** ในแอปหลังล็อกอิน (ผูก owner ให้อัตโนมัติ)
 หรือดู [`seed.sql`](seed.sql) หากอยาก seed ผ่าน SQL Editor เอง
+
+## Edge Functions (LINE)
+โฟลเดอร์ [`supabase/functions/`](supabase/functions/) มี 2 ฟังก์ชัน:
+- **line-push** — ทีมส่งข้อความ → เด้งเข้า LINE ของ KOL
+- **line-webhook** — รับข้อความจาก KOL ทาง LINE → บันทึกลง `messages`
+
+ตั้ง secrets แล้ว deploy:
+```bash
+supabase secrets set LINE_CHANNEL_ACCESS_TOKEN=xxxx LINE_CHANNEL_SECRET=xxxx
+supabase functions deploy line-push
+supabase functions deploy line-webhook --no-verify-jwt
+```
+
+ดูขั้นตอน host ทั้งหมด (Vercel + Supabase + LINE) ที่ [`../HOSTING.md`](../HOSTING.md)

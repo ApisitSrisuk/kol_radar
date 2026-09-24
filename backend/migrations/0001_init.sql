@@ -38,6 +38,9 @@ create table if not exists public.kols (
   roi             numeric(5,2) not null default 0,
   growth          numeric(5,2) not null default 0,
   contact         text not null default '',
+  line_id         text not null default '',
+  -- LINE userId (ขึ้นต้น U...) ได้จาก webhook เมื่อ KOL แอด/ทัก OA — ใช้สำหรับ push
+  line_user_id    text,
   -- comp card / media kit: โหมด Local เก็บเป็น data URL (base64)
   -- โปรดักชันจริงควรอัปโหลดขึ้น Supabase Storage แล้วเก็บเป็น URL แทน
   compcard        text,
@@ -75,6 +78,7 @@ create table if not exists public.messages (
   kol_id      uuid not null references public.kols(id) on delete cascade,
   sender      text not null check (sender in ('team','kol')),
   text        text not null,
+  via_line    boolean not null default false,
   created_at  timestamptz not null default now()
 );
 
