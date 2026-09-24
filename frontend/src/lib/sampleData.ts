@@ -34,7 +34,7 @@ export async function seedSampleData(): Promise<void> {
   // 1) เพิ่ม KOL ทีละคน เก็บ id ที่ได้
   const kolIds: string[] = []
   for (const k of SAMPLE_KOLS) {
-    const created = await repo.addKol(k)
+    const created = await repo.addKol({ ...k, line_id: k.line_id ?? k.handle.replace('@', '') })
     kolIds.push(created.id)
   }
 

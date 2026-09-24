@@ -16,12 +16,13 @@ interface ApplyState {
   engagement_rate: number
   rate_per_post: number
   contact: string
+  line_id: string
   compcard?: string
 }
 
 const empty: ApplyState = {
   name: '', handle: '', category: 'ความงาม', platforms: ['ig'],
-  followers: 0, engagement_rate: 0, rate_per_post: 0, contact: '', compcard: undefined,
+  followers: 0, engagement_rate: 0, rate_per_post: 0, contact: '', line_id: '', compcard: undefined,
 }
 
 export function KolApplyForm({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -51,6 +52,7 @@ export function KolApplyForm({ open, onClose }: { open: boolean; onClose: () => 
     if (!form.name.trim() || !form.handle.trim()) { setErr('กรุณากรอกชื่อและ handle'); return }
     if (form.platforms.length === 0) { setErr('เลือกอย่างน้อย 1 แพลตฟอร์ม'); return }
     if (!form.contact.trim()) { setErr('กรุณากรอกช่องทางติดต่อ'); return }
+    if (!form.line_id.trim()) { setErr('กรุณากรอก LINE ID เพื่อให้ทีมงานติดต่อกลับได้'); return }
     setBusy(true)
     setErr(null)
     try {
@@ -68,6 +70,7 @@ export function KolApplyForm({ open, onClose }: { open: boolean; onClose: () => 
         roi: 0,
         growth: 0,
         contact: form.contact.trim(),
+        line_id: form.line_id.trim(),
         compcard: form.compcard,
       }
       await repo.addKol(input)
@@ -113,8 +116,11 @@ export function KolApplyForm({ open, onClose }: { open: boolean; onClose: () => 
                 {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
               </Select>
             </Field>
-            <Field label="ช่องทางติดต่อ (อีเมล / Line / เบอร์)">
-              <TextInput value={form.contact} onChange={(e) => set('contact', e.target.value)} placeholder="you@email.com หรือ Line ID" />
+            <Field label="ช่องทางติดต่อ (อีเมล / เบอร์)">
+              <TextInput value={form.contact} onChange={(e) => set('contact', e.target.value)} placeholder="you@email.com หรือ 08x-xxx-xxxx" />
+            </Field>
+            <Field label="LINE ID (จำเป็น — ให้ทีมทักได้)">
+              <TextInput value={form.line_id} onChange={(e) => set('line_id', e.target.value)} placeholder="@yourlineid หรือ line id" />
             </Field>
           </div>
 

@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { MessageCircle, ChevronDown, ChevronLeft, Search } from 'lucide-react'
 import { useData } from '../../hooks/DataContext'
+import { useToast } from '../../hooks/Toast'
 import { Avatar } from '../common'
 import { ChatThread } from './ChatThread'
-import { fetchThreadsMeta, onChatChange, type ThreadMeta } from '../../lib/chat'
+import { fetchThreadsMeta, subscribeAllMessages, type ThreadMeta } from '../../lib/chat'
+import { isLineConnected, pushMessageToLine } from '../../lib/line'
 
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
 
 export function ChatWidget({ role, kolId }: { role: 'team' | 'kol'; kolId?: string }) {
   const { kols } = useData()
+  const toast = useToast()
   const [open, setOpen] = useState(false)
   const [sel, setSel] = useState<string | null>(null)
   const [q, setQ] = useState('')
@@ -19,7 +22,7 @@ export function ChatWidget({ role, kolId }: { role: 'team' | 'kol'; kolId?: stri
     if (!open) return
     const load = () => fetchThreadsMeta().then(setThreads)
     load()
-    return onChatChange(load)
+    return subscribeAllMessages(load)
   }, [open, sel])
 
   const list = useMemo(() => {
@@ -97,7 +100,25 @@ export function ChatWidget({ role, kolId }: { role: 'team' | 'kol'; kolId?: stri
         {role === 'kol' && me ? (
           <ChatThread kolId={me.id} viewer="kol" peerName="ทีมงาน" peerSeed="team-radar" />
         ) : role === 'team' && selKol ? (
-          <ChatThread kolId={selKol.id} viewer="team" peerName={selKol.name} peerSeed={selKol.id} />
+          <ChatThread
+            kolId={selKol.id}
+            viewer="team"
+            peerName={selKol.name}
+            peerSeed={selKol.id}
+            sendViaLine={isLineConnected() && !!selKol.line_id}
+            onLineNotified={async (text) => {
+              const r = await pushMessageToLine(selKol, text)
+              if (r.sent) {
+                toast(
+                  r.simulated
+                    ? `📲 เด้งเข้า LINE ของ ${selKol.name} (จำลอง)`
+                    : `📲 ส่งเข้า LINE ของ ${selKol.name} แล้ว`
+                )
+              } else {
+                toast('ส่งเข้า LINE ไม่สำเร็จ: ' + r.reason, 'error')
+              }
+            }}
+          />
         ) : (
           // team: conversation list
           <div className="flex h-full flex-col">

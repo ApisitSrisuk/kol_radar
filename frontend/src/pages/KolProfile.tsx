@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft, Pencil } from 'lucide-react'
+import { ChevronLeft, Pencil, KeyRound } from 'lucide-react'
 import { useData } from '../hooks/DataContext'
 import { useToast } from '../hooks/Toast'
-import { Card, CardHeader, Button } from '../components/ui'
+import { createKolLogin } from '../lib/kolAuth'
+import { LOCAL_MODE } from '../lib/repo'
+import { Card, CardHeader, Button, Field, TextInput } from '../components/ui'
 import { Avatar, PlatformChips, TierBadge, StatusBadge, StageBadge } from '../components/common'
 import { KolForm } from '../components/KolForm'
 import { CompCard } from '../components/CompCard'
@@ -17,9 +19,13 @@ const MONTHS = ['เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.'
 export function KolProfile() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { kols, campaigns, updateKol } = useData()
+  const { kols, campaigns, updateKol, refreshAll } = useData()
   const toast = useToast()
   const [editOpen, setEditOpen] = useState(false)
+  const [loginOpen, setLoginOpen] = useState(false)
+  const [email, setEmail] = useState('')
+  const [pw, setPw] = useState('')
+  const [busy, setBusy] = useState(false)
   const k = kols.find((x) => x.id === id)
 
   if (!k) {
@@ -60,6 +66,26 @@ export function KolProfile() {
     toast(`แก้ไข "${input.name}" แล้ว`)
   }
 
+  const createLogin = async () => {
+    if (!email.trim() || pw.length < 6) {
+      toast('กรอกอีเมล และรหัสผ่านอย่างน้อย 6 ตัว', 'error')
+      return
+    }
+    setBusy(true)
+    try {
+      await createKolLogin(k.id, email.trim(), pw)
+      toast(`สร้างบัญชี login ให้ "${k.name}" แล้ว`)
+      setLoginOpen(false)
+      setEmail('')
+      setPw('')
+      await refreshAll()
+    } catch (e) {
+      toast((e as Error).message, 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <button onClick={() => nav('/kols')} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted hover:text-accent">
@@ -77,15 +103,42 @@ export function KolProfile() {
                 <StatusBadge status={k.status} />
               </div>
               <div className="mt-0.5 text-faint">{k.handle} · {k.category}</div>
-              {k.contact && (
-                <div className="mt-1 text-[12.5px] text-muted">ติดต่อ: {k.contact}</div>
+              {(k.contact || k.line_id) && (
+                <div className="mt-1 text-[12.5px] text-muted">
+                  {k.contact && <>ติดต่อ: {k.contact}</>}
+                  {k.contact && k.line_id && ' · '}
+                  {k.line_id && <>LINE: {k.line_id}</>}
+                </div>
               )}
               <div className="mt-3 flex items-center gap-2">
                 <PlatformChips platforms={k.platforms} />
                 <span className="text-[12.5px] text-muted">{k.platforms.map((p) => PLATFORMS[p].name).join(' · ')}</span>
               </div>
             </div>
-            <Button variant="outline" onClick={() => setEditOpen(true)}><Pencil size={15} />แก้ไข</Button>
+            <div className="flex flex-wrap gap-2">
+              {k.line_id && (
+                <a
+                  href={`https://line.me/R/ti/p/~${encodeURIComponent(k.line_id.replace(/^[@~]/, ''))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-[13px] font-semibold text-white transition hover:brightness-105"
+                  style={{ background: '#06C755' }}
+                >
+                  ทักผ่าน LINE
+                </a>
+              )}
+              <Button variant="outline" onClick={() => setEditOpen(true)}><Pencil size={15} />แก้ไข</Button>
+              {!LOCAL_MODE &&
+                (k.account_id ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-[10px] bg-good-soft px-3 py-2 text-[12.5px] font-semibold text-good">
+                    <KeyRound size={14} />มีบัญชี login แล้ว
+                  </span>
+                ) : (
+                  <Button variant="outline" onClick={() => setLoginOpen(true)}>
+                    <KeyRound size={15} />สร้างบัญชี login
+                  </Button>
+                ))}
+            </div>
           </div>
 
           <div className="mt-5 grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(120px,1fr))]">
@@ -160,6 +213,27 @@ export function KolProfile() {
       </Card>
 
       <KolForm open={editOpen} onClose={() => setEditOpen(false)} onSubmit={submit} initial={k} />
+
+      {loginOpen && (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/40 p-4" onClick={() => !busy && setLoginOpen(false)}>
+          <div className="w-full max-w-sm rounded-xl2 border border-line bg-surface p-5 shadow-lift" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-[15px] font-semibold">สร้างบัญชี login ให้ {k.name}</h3>
+            <p className="mt-1 text-[12.5px] text-muted">KOL จะใช้อีเมล/รหัสผ่านนี้เข้าสู่ระบบเพื่อดูโปรไฟล์และแชทกับทีม</p>
+            <div className="mt-4 space-y-3">
+              <Field label="อีเมล">
+                <TextInput type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="kol@email.com" />
+              </Field>
+              <Field label="รหัสผ่าน (อย่างน้อย 6 ตัว)">
+                <TextInput type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="••••••" />
+              </Field>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setLoginOpen(false)} disabled={busy} className="rounded-[10px] px-4 py-2 text-[13px] font-semibold text-muted hover:text-fg">ยกเลิก</button>
+              <Button onClick={createLogin} disabled={busy}>{busy ? 'กำลังสร้าง...' : 'สร้างบัญชี'}</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -27,6 +27,7 @@ export function PortalProfile() {
     ['ค่าตัว/โพสต์', baht(me.rate_per_post)],
     ['ROI (ทีมประเมิน)', me.roi.toFixed(1) + 'x', 'var(--accent)'],
     ['ช่องทางติดต่อ', me.contact || '—'],
+    ['LINE ID', me.line_id || '—'],
   ]
 
   return (
@@ -94,6 +95,7 @@ interface EditState {
   engagement_rate: number
   rate_per_post: number
   contact: string
+  line_id: string
   compcard?: string
 }
 
@@ -146,6 +148,7 @@ function EditModal({
         roi: me.roi,
         growth: me.growth,
         contact: form.contact.trim(),
+        line_id: form.line_id.trim(),
         compcard: form.compcard,
       }
       await onSave(input)
@@ -173,7 +176,10 @@ function EditModal({
             </Select>
           </Field>
           <Field label="ช่องทางติดต่อ">
-            <TextInput value={form.contact} onChange={(e) => set('contact', e.target.value)} placeholder="อีเมล / Line / เบอร์" />
+            <TextInput value={form.contact} onChange={(e) => set('contact', e.target.value)} placeholder="อีเมล / เบอร์" />
+          </Field>
+          <Field label="LINE ID">
+            <TextInput value={form.line_id} onChange={(e) => set('line_id', e.target.value)} placeholder="@yourlineid" />
           </Field>
         </div>
 
@@ -235,6 +241,7 @@ function pick(k: Kol): EditState {
     engagement_rate: k.engagement_rate,
     rate_per_post: k.rate_per_post,
     contact: k.contact ?? '',
+    line_id: k.line_id ?? '',
     compcard: k.compcard,
   }
 }

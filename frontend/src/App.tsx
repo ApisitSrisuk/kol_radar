@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { DataProvider } from './hooks/DataContext'
 import { ToastProvider } from './hooks/Toast'
 import { ThemeProvider } from './hooks/ThemeContext'
 import { LOCAL_MODE } from './lib/repo'
+import { supabase } from './lib/supabase'
 import { Layout } from './components/Layout'
 import { PortalLayout } from './components/PortalLayout'
 import { Login } from './pages/Login'
@@ -14,6 +15,7 @@ import { KolProfile } from './pages/KolProfile'
 import { Campaigns } from './pages/Campaigns'
 import { Analytics } from './pages/Analytics'
 import { Settings } from './pages/Settings'
+import { Integrations } from './pages/Integrations'
 import { PortalDashboard } from './pages/portal/PortalDashboard'
 import { PortalProfile } from './pages/portal/PortalProfile'
 import { PortalCampaigns } from './pages/portal/PortalCampaigns'
@@ -31,6 +33,7 @@ function TeamShell() {
           <Route path="campaigns" element={<Campaigns />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="integrations" element={<Integrations />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
@@ -77,7 +80,7 @@ function saveSession(s: Session) {
 }
 
 function Gate() {
-  const { user, loading } = useAuth()
+  const { user, loading, role, signOut } = useAuth()
   const [session, setSession] = useState<Session>(loadSession)
 
   const enter = (s: Session) => {
@@ -102,11 +105,47 @@ function Gate() {
     )
   }
 
-  // โหมด Supabase: ล็อกอินทีมด้วย auth จริง
-  if (loading)
+  // โหมด Supabase: ล็อกอินด้วย auth จริง
+  if (loading || (user && role === null))
     return <div className="grid min-h-dvh place-items-center text-faint">กำลังโหลด...</div>
   if (!user) return <Login />
+  if (role === 'kol') return <KolPortalGate userId={user.id} onExit={signOut} />
   return <TeamShell />
+}
+
+/** โหมด Supabase: หา KOL ที่ผูกกับบัญชีนี้ แล้วเข้า Portal */
+function KolPortalGate({ userId, onExit }: { userId: string; onExit: () => void }) {
+  const [kolId, setKolId] = useState<string | null | undefined>(undefined)
+  useEffect(() => {
+    let alive = true
+    supabase
+      .from('kols')
+      .select('id')
+      .eq('account_id', userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (alive) setKolId(data?.id ?? null)
+      })
+    return () => {
+      alive = false
+    }
+  }, [userId])
+
+  if (kolId === undefined)
+    return <div className="grid min-h-dvh place-items-center text-faint">กำลังโหลด...</div>
+  if (!kolId)
+    return (
+      <div className="grid min-h-dvh place-items-center p-6 text-center">
+        <div>
+          <div className="text-[15px] font-semibold">บัญชีนี้ยังไม่ได้ผูกกับ KOL</div>
+          <p className="mt-1 text-[13px] text-muted">ติดต่อทีมงานให้ผูกบัญชี หรือออกจากระบบ</p>
+          <button onClick={onExit} className="mt-4 rounded-[10px] border border-line px-4 py-2 text-[13px] font-semibold hover:text-accent">
+            ออกจากระบบ
+          </button>
+        </div>
+      </div>
+    )
+  return <PortalShell kolId={kolId} onExit={onExit} />
 }
 
 export default function App() {

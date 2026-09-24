@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Send } from 'lucide-react'
-import { fetchMessages, sendMessage, onChatChange, type ChatMessage, type Sender } from '../../lib/chat'
+import { fetchMessages, sendMessage, subscribeMessages, type ChatMessage, type Sender } from '../../lib/chat'
 import { Avatar } from '../common'
 
 const fmtTime = (iso: string) =>
@@ -11,11 +11,16 @@ export function ChatThread({
   viewer,
   peerName,
   peerSeed,
+  sendViaLine = false,
+  onLineNotified,
 }: {
   kolId: string
   viewer: Sender
   peerName: string
   peerSeed?: string
+  /** ทำเครื่องหมาย + แจ้งว่าข้อความนี้เด้งเข้า LINE ด้วย (ฝั่งทีมเท่านั้น) */
+  sendViaLine?: boolean
+  onLineNotified?: (text: string) => void
 }) {
   const [msgs, setMsgs] = useState<ChatMessage[]>([])
   const [text, setText] = useState('')
@@ -27,7 +32,7 @@ export function ChatThread({
     setLoading(true)
     const load = () => fetchMessages(kolId).then((m) => alive && setMsgs(m))
     load().finally(() => alive && setLoading(false))
-    const off = onChatChange(load)
+    const off = subscribeMessages(kolId, load)
     return () => {
       alive = false
       off()
@@ -43,8 +48,9 @@ export function ChatThread({
     const t = text.trim()
     if (!t) return
     setText('')
-    const m = await sendMessage(kolId, viewer, t)
+    const m = await sendMessage(kolId, viewer, t, sendViaLine)
     setMsgs((prev) => [...prev, m])
+    if (sendViaLine) onLineNotified?.(t)
   }
 
   return (
@@ -72,7 +78,17 @@ export function ChatThread({
                   >
                     {m.text}
                   </div>
-                  <span className="mt-0.5 px-1 text-[10.5px] text-faint">{fmtTime(m.created_at)}</span>
+                  <span className="mt-0.5 flex items-center gap-1 px-1 text-[10.5px] text-faint">
+                    {fmtTime(m.created_at)}
+                    {m.via_line && (
+                      <span
+                        className="rounded px-1 font-semibold text-white"
+                        style={{ background: '#06C755', fontSize: '9px' }}
+                      >
+                        LINE
+                      </span>
+                    )}
+                  </span>
                 </div>
               </div>
             )

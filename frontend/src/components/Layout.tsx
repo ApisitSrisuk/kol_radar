@@ -5,6 +5,7 @@ import {
   Users,
   Megaphone,
   BarChart3,
+  Plug,
   Settings,
   Moon,
   Sun,
@@ -34,7 +35,7 @@ const TABS: TabItem[] = [
 export function Layout() {
   const { dark, toggle, siteName } = useTheme()
   const brand = siteName.trim() || DEFAULT_SITE_NAME
-  const { user, signOut } = useAuth()
+  const { user, signOut, isSuperAdmin } = useAuth()
   const [open, setOpen] = useState(false)
   const loc = useLocation()
 
@@ -80,6 +81,21 @@ export function Layout() {
         <div className="px-2.5 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wider text-faint">
           อื่น ๆ
         </div>
+        {isSuperAdmin && (
+          <NavLink
+            to="/integrations"
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition ${
+                isActive
+                  ? 'bg-accent-soft font-semibold text-accent-ink'
+                  : 'text-muted hover:bg-surface-2 hover:text-fg'
+              }`
+            }
+          >
+            <Plug size={19} strokeWidth={1.9} />
+            เชื่อมต่อ LINE
+          </NavLink>
+        )}
         <NavLink
           to="/settings"
           className={({ isActive }) =>
@@ -169,6 +185,7 @@ const TITLES: Record<string, [string, string]> = {
   '/campaigns': ['แคมเปญ', 'ติดตามสถานะแคมเปญทั้งหมด'],
   '/analytics': ['วิเคราะห์', 'เจาะลึกข้อมูลเชิงลึกและ ROI'],
   '/settings': ['ตั้งค่า', 'ปรับแต่งธีมและสีของระบบ'],
+  '/integrations': ['เชื่อมต่อ LINE', 'ตั้งค่าคีย์เพื่อรับข้อความจาก LINE'],
 }
 function PageTitle() {
   const loc = useLocation()

@@ -7,7 +7,7 @@ import type { Kol, KolInput, Platform } from '../types'
 const empty: KolInput = {
   name: '', handle: '', category: 'ความงาม', tier: 'micro', platforms: ['ig'],
   followers: 0, engagement_rate: 0, avg_views: 0, rate_per_post: 0,
-  status: 'active', roi: 0, growth: 0, contact: '', compcard: undefined,
+  status: 'active', roi: 0, growth: 0, contact: '', line_id: '', compcard: undefined,
 }
 
 export function KolForm({
@@ -131,7 +131,10 @@ export function KolForm({
             </Select>
           </Field>
           <Field label="ช่องทางติดต่อ">
-            <TextInput value={form.contact ?? ''} onChange={(e) => set('contact', e.target.value)} placeholder="อีเมล / Line / เบอร์" />
+            <TextInput value={form.contact ?? ''} onChange={(e) => set('contact', e.target.value)} placeholder="อีเมล / เบอร์" />
+          </Field>
+          <Field label="LINE ID">
+            <TextInput value={form.line_id ?? ''} onChange={(e) => set('line_id', e.target.value)} placeholder="@yourlineid" />
           </Field>
         </div>
 

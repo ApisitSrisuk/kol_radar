@@ -19,7 +19,10 @@ export interface Kol {
   roi: number
   growth: number
   contact?: string
+  line_id?: string
   compcard?: string
+  /** auth user id ของ KOL (ถ้าสร้างบัญชี login ให้แล้ว) */
+  account_id?: string | null
   created_at: string
 }
 

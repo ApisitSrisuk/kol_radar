@@ -14,6 +14,8 @@ export interface ChatMessage {
   sender: Sender
   text: string
   created_at: string
+  /** ข้อความนี้ถูกเด้งเข้า LINE ของ KOL ด้วย */
+  via_line?: boolean
 }
 
 export interface ThreadMeta {
@@ -56,13 +58,19 @@ export async function fetchMessages(kolId: string): Promise<ChatMessage[]> {
   return (data ?? []) as ChatMessage[]
 }
 
-export async function sendMessage(kolId: string, sender: Sender, text: string): Promise<ChatMessage> {
+export async function sendMessage(
+  kolId: string,
+  sender: Sender,
+  text: string,
+  viaLine = false
+): Promise<ChatMessage> {
   const msg: ChatMessage = {
     id: uid(),
     kol_id: kolId,
     sender,
     text,
     created_at: new Date().toISOString(),
+    via_line: viaLine || undefined,
   }
   if (LOCAL_MODE) {
     const arr = loadAll()
@@ -72,7 +80,7 @@ export async function sendMessage(kolId: string, sender: Sender, text: string): 
   }
   const { data, error } = await supabase
     .from('messages')
-    .insert({ kol_id: kolId, sender, text })
+    .insert({ kol_id: kolId, sender, text, via_line: viaLine })
     .select('*')
     .single()
   if (error) throw error
@@ -109,4 +117,32 @@ export function onChatChange(cb: () => void): () => void {
   }
   window.addEventListener('storage', handler)
   return () => window.removeEventListener('storage', handler)
+}
+
+/** เรียลไทม์: ฟังข้อความใหม่ของ KOL คนเดียว — Local ใช้ storage event / Supabase ใช้ Realtime */
+export function subscribeMessages(kolId: string, cb: () => void): () => void {
+  if (LOCAL_MODE) return onChatChange(cb)
+  const ch = supabase
+    .channel(`msg-${kolId}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'messages', filter: `kol_id=eq.${kolId}` },
+      () => cb()
+    )
+    .subscribe()
+  return () => {
+    supabase.removeChannel(ch)
+  }
+}
+
+/** เรียลไทม์: ฟังข้อความใหม่ทุก KOL (สำหรับรายการแชทฝั่งทีม) */
+export function subscribeAllMessages(cb: () => void): () => void {
+  if (LOCAL_MODE) return onChatChange(cb)
+  const ch = supabase
+    .channel('msg-all')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => cb())
+    .subscribe()
+  return () => {
+    supabase.removeChannel(ch)
+  }
 }

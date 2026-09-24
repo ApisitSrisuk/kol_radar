@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, Pencil, Trash2, Search } from 'lucide-react'
 import { useData } from '../hooks/DataContext'
 import { useToast } from '../hooks/Toast'
+import { useAuth } from '../hooks/useAuth'
 import { Card, Button } from '../components/ui'
 import { Avatar, PlatformChips, TierBadge, StatusBadge, Engagement } from '../components/common'
 import { KolForm } from '../components/KolForm'
@@ -14,6 +15,7 @@ import type { Kol, Tier, Platform, KolInput } from '../types'
 export function Kols() {
   const { kols, loading, addKol, updateKol, removeKol } = useData()
   const toast = useToast()
+  const { isSuperAdmin } = useAuth()
   const nav = useNavigate()
   const [tier, setTier] = useState<Tier | 'all'>('all')
   const [plat, setPlat] = useState<Platform | 'all'>('all')
@@ -135,7 +137,9 @@ export function Kols() {
                     <td className="px-4 py-3">
                       <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => openEdit(k)} className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-surface-3 hover:text-fg"><Pencil size={15} /></button>
-                        <button onClick={() => setConfirmTarget(k)} className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-bad-soft hover:text-bad"><Trash2 size={15} /></button>
+                        {isSuperAdmin && (
+                          <button onClick={() => setConfirmTarget(k)} className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-bad-soft hover:text-bad"><Trash2 size={15} /></button>
+                        )}
                       </div>
                     </td>
                   </tr>
