@@ -4,6 +4,9 @@ import { Modal, Field, TextInput, Select, Button } from './ui'
 import { ImageField } from './ImageField'
 import { ALL_PLATFORMS, PLATFORMS, TIER_LABEL, CATEGORIES, tierFromFollowers } from '../lib/constants'
 import * as repo from '../lib/repo'
+import { LOCAL_MODE } from '../lib/repo'
+import { registerKol } from '../lib/kolAuth'
+import { useAuth } from '../hooks/useAuth'
 import { fmt } from '../lib/format'
 import type { KolInput, Platform } from '../types'
 
@@ -17,15 +20,19 @@ interface ApplyState {
   rate_per_post: number
   contact: string
   line_id: string
+  email: string
+  password: string
   compcard?: string
 }
 
 const empty: ApplyState = {
   name: '', handle: '', category: 'ความงาม', platforms: ['ig'],
-  followers: 0, engagement_rate: 0, rate_per_post: 0, contact: '', line_id: '', compcard: undefined,
+  followers: 0, engagement_rate: 0, rate_per_post: 0, contact: '', line_id: '',
+  email: '', password: '', compcard: undefined,
 }
 
 export function KolApplyForm({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { signIn } = useAuth()
   const [form, setForm] = useState<ApplyState>(empty)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -53,6 +60,10 @@ export function KolApplyForm({ open, onClose }: { open: boolean; onClose: () => 
     if (form.platforms.length === 0) { setErr('เลือกอย่างน้อย 1 แพลตฟอร์ม'); return }
     if (!form.contact.trim()) { setErr('กรุณากรอกช่องทางติดต่อ'); return }
     if (!form.line_id.trim()) { setErr('กรุณากรอก LINE ID เพื่อให้ทีมงานติดต่อกลับได้'); return }
+    if (!LOCAL_MODE) {
+      if (!form.email.trim()) { setErr('กรุณากรอกอีเมลสำหรับเข้าสู่ระบบ'); return }
+      if (form.password.length < 6) { setErr('รหัสผ่านอย่างน้อย 6 ตัวอักษร'); return }
+    }
     setBusy(true)
     setErr(null)
     try {
@@ -73,13 +84,21 @@ export function KolApplyForm({ open, onClose }: { open: boolean; onClose: () => 
         line_id: form.line_id.trim(),
         compcard: form.compcard,
       }
-      await repo.addKol(input)
-      setDone(true)
+      if (LOCAL_MODE) {
+        await repo.addKol(input)
+        setDone(true)
+      } else {
+        // สมัคร + สร้างบัญชี แล้วล็อกอินเข้า Portal ให้เลย
+        await registerKol(form.email.trim(), form.password, input)
+        try {
+          await signIn(form.email.trim(), form.password)
+          // ล็อกอินสำเร็จ → แอปจะพาเข้า Portal เอง (modal จะหายไป)
+        } catch {
+          setDone(true) // เผื่อ auto-login ไม่ผ่าน ให้ผู้ใช้ล็อกอินเอง
+        }
+      }
     } catch (e2) {
-      setErr(
-        (e2 as Error).message +
-          ' (ในโหมด Supabase การสมัครสาธารณะต้องตั้งค่าตารางรับสมัครเพิ่มเติม)'
-      )
+      setErr((e2 as Error).message)
     } finally {
       setBusy(false)
     }
@@ -92,17 +111,33 @@ export function KolApplyForm({ open, onClose }: { open: boolean; onClose: () => 
           <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-good-soft text-good">
             <CheckCircle2 size={34} />
           </div>
-          <h3 className="mb-1 text-xl font-semibold">ส่งใบสมัครเรียบร้อย!</h3>
+          <h3 className="mb-1 text-xl font-semibold">สมัครเรียบร้อย!</h3>
           <p className="mb-5 text-sm text-muted">
-            ทีมงานได้รับข้อมูลของคุณแล้ว (สถานะ “รออนุมัติ”) และจะติดต่อกลับทางช่องทางที่ให้ไว้
+            {LOCAL_MODE
+              ? 'ทีมงานได้รับข้อมูลของคุณแล้ว (สถานะ “รออนุมัติ”)'
+              : 'สร้างบัญชีเรียบร้อย — เข้าสู่ระบบด้วยอีเมล/รหัสผ่านที่ตั้งไว้ได้เลย'}
           </p>
           <Button onClick={onClose}>เสร็จสิ้น</Button>
         </div>
       ) : (
         <form onSubmit={submit} className="space-y-4">
           <p className="rounded-lg bg-accent-soft px-3 py-2 text-[12.5px] text-accent-ink">
-            กรอกข้อมูลเพื่อเข้าร่วมเครือข่าย KOL ของเรา — ทีมงานจะรีวิวและติดต่อกลับ
+            กรอกข้อมูลเพื่อเข้าร่วมเครือข่าย KOL ของเรา — สมัครเสร็จเข้าใช้งานได้ทันที
           </p>
+
+          {!LOCAL_MODE && (
+            <div className="rounded-lg border border-line bg-surface-2 p-3">
+              <div className="mb-2 text-[12.5px] font-semibold">บัญชีเข้าสู่ระบบ</div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="อีเมล (ใช้ login)">
+                  <TextInput type="email" value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="you@email.com" />
+                </Field>
+                <Field label="รหัสผ่าน (อย่างน้อย 6 ตัว)">
+                  <TextInput type="password" value={form.password} onChange={(e) => set('password', e.target.value)} placeholder="••••••" />
+                </Field>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="ชื่อ / ชื่อในวงการ">
